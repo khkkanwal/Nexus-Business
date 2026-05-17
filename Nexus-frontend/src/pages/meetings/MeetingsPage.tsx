@@ -274,6 +274,14 @@ export const MeetingsPage: React.FC = () => {
                           >
                             Delete
                           </Button>
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              navigate(`/meetings/${meeting._id}/call`)
+                            }
+                          >
+                            Join Call
+                          </Button>
                         </>
                       )}
                     </div>

@@ -35,6 +35,7 @@ import { MeetingsPage } from "./pages/meetings/MeetingsPage";
 import { MeetingDetailsPage } from "./pages/meetings/MeetingDetailsPage";
 import { CreateMeetingPage } from "./pages/meetings/CreateMeetingPage";
 import { EditMeetingPage } from "./pages/meetings/EditMeetingPage";
+import { VideoCallPage } from "./pages/meetings/VideoCallPage";
 // Chat Pages
 import { ChatPage } from "./pages/chat/ChatPage";
 
@@ -97,6 +98,7 @@ function App() {
             <Route path=":id" element={<MeetingDetailsPage />} />
             <Route path="create" element={<CreateMeetingPage />} />
             <Route path=":id/edit" element={<EditMeetingPage />} />
+            <Route path=":id/call" element={<VideoCallPage />} />
           </Route>
 
           {/* Chat Routes */}
