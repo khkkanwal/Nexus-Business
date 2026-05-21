@@ -5,6 +5,8 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
+import documentRoutes from "./routes/documentRoutes.js";
+import http from "http";
 import { Server } from "socket.io";
 
 dotenv.config();
@@ -14,6 +16,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+import path from "path";
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
 app.get("/", (req, res) => {
   res.send("API Running");
 });
@@ -21,6 +26,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/meetings", meetingRoutes);
+app.use("/api/documents", documentRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -55,6 +61,6 @@ io.on("connection", (socket) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
