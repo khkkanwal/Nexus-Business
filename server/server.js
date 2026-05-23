@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
 import documentRoutes from "./routes/documentRoutes.js";
+import transactionRoutes from "./routes/transactionRoutes.js";
 import http from "http";
 import { Server } from "socket.io";
 
@@ -27,6 +28,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/documents", documentRoutes);
+app.use("/api/transactions", transactionRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {

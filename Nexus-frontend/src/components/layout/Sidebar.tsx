@@ -65,6 +65,11 @@ export const Sidebar: React.FC = () => {
       icon: <CalendarDays size={20} />,
       text: "Meetings",
     },
+    {
+      to: "/payments",
+      icon: <CircleDollarSign size={20} />,
+      text: "Payments",
+    },
     { to: "/messages", icon: <MessageCircle size={20} />, text: "Messages" },
     { to: "/notifications", icon: <Bell size={20} />, text: "Notifications" },
     { to: "/documents", icon: <FileText size={20} />, text: "Documents" },
@@ -82,6 +87,11 @@ export const Sidebar: React.FC = () => {
       to: "/meetings",
       icon: <CalendarDays size={20} />,
       text: "Meetings",
+    },
+    {
+      to: "/payments",
+      icon: <CircleDollarSign size={20} />,
+      text: "Payments",
     },
     { to: "/messages", icon: <MessageCircle size={20} />, text: "Messages" },
     { to: "/notifications", icon: <Bell size={20} />, text: "Notifications" },

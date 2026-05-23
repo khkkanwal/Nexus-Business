@@ -16,9 +16,6 @@ export const DocumentsPage: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // =========================
-  // FETCH DOCUMENTS
-  // =========================
   const fetchDocuments = async () => {
     try {
       setLoading(true);
@@ -45,9 +42,6 @@ export const DocumentsPage: React.FC = () => {
     fetchDocuments();
   }, []);
 
-  // =========================
-  // HANDLE FILE UPLOAD
-  // =========================
   const handleUpload = async () => {
     if (!selectedFile) {
       alert("Please select a file");
@@ -58,10 +52,8 @@ export const DocumentsPage: React.FC = () => {
     try {
       const formData = new FormData();
 
-      // TITLE
       formData.append("title", selectedFile.name);
 
-      // FILE
       formData.append("document", selectedFile);
 
       const token = localStorage.getItem("token");
@@ -96,9 +88,6 @@ export const DocumentsPage: React.FC = () => {
     }
   };
 
-  // =========================
-  // DELETE DOCUMENT
-  // =========================
   const handleDelete = async (id: string) => {
     try {
       const confirmDelete = window.confirm(
@@ -133,23 +122,14 @@ export const DocumentsPage: React.FC = () => {
     }
   };
 
-  // =========================
-  // DOWNLOAD DOCUMENT
-  // =========================
   const handleDownload = (fileUrl: string) => {
     window.open(`http://localhost:5000/${fileUrl}`, "_blank");
   };
 
-  // =========================
-  // PREVIEW DOCUMENT
-  // =========================
   const handlePreview = (fileUrl: string) => {
     window.open(`http://localhost:5000/${fileUrl}`, "_blank");
   };
 
-  // =========================
-  // SHARE DOCUMENT
-  // =========================
   const handleShare = async (fileUrl: string) => {
     const fullUrl = `http://localhost:5000/${fileUrl}`;
 
@@ -162,9 +142,6 @@ export const DocumentsPage: React.FC = () => {
     }
   };
 
-  // =========================
-  // STORAGE CALCULATION
-  // =========================
   const totalSize = documents.reduce((acc, doc) => {
     return acc + (doc.size || 0);
   }, 0);
@@ -173,7 +150,6 @@ export const DocumentsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* HEADER */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
@@ -245,7 +221,6 @@ export const DocumentsPage: React.FC = () => {
           </CardBody>
         </Card>
 
-        {/* DOCUMENT LIST */}
         <div className="lg:col-span-3">
           <Card>
             <CardHeader>
@@ -296,7 +271,6 @@ export const DocumentsPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* ACTIONS */}
                       <div className="flex items-center gap-2 ml-4">
                         {/* PREVIEW */}
                         <Button
@@ -308,7 +282,6 @@ export const DocumentsPage: React.FC = () => {
                           <Eye size={18} />
                         </Button>
 
-                        {/* DOWNLOAD */}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -318,7 +291,6 @@ export const DocumentsPage: React.FC = () => {
                           <Download size={18} />
                         </Button>
 
-                        {/* SHARE */}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -328,7 +300,6 @@ export const DocumentsPage: React.FC = () => {
                           <Share2 size={18} />
                         </Button>
 
-                        {/* DELETE */}
                         <Button
                           variant="ghost"
                           size="sm"

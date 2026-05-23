@@ -1,0 +1,129 @@
+import Transaction from "../models/transactionModel.js";
+
+const transactionController = {};
+
+transactionController.deposit = async (req, res) => {
+  try {
+    const { amount } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        message: "Invalid amount",
+      });
+    }
+
+    const transaction = await Transaction.create({
+      user: req.user.id,
+
+      type: "deposit",
+
+      amount,
+
+      status: "completed",
+    });
+
+    res.status(201).json({
+      message: "Deposit successful",
+
+      transaction,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+transactionController.withdraw = async (req, res) => {
+  try {
+    const { amount } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        message: "Invalid amount",
+      });
+    }
+
+    const transaction = await Transaction.create({
+      user: req.user.id,
+
+      type: "withdraw",
+
+      amount,
+
+      status: "completed",
+    });
+
+    res.status(201).json({
+      message: "Withdraw successful",
+
+      transaction,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+transactionController.transfer = async (req, res) => {
+  try {
+    const { amount, recipient } = req.body;
+
+    if (!amount || amount <= 0 || !recipient) {
+      return res.status(400).json({
+        message: "Invalid transfer data",
+      });
+    }
+
+    const transaction = await Transaction.create({
+      user: req.user.id,
+
+      recipient,
+
+      type: "transfer",
+
+      amount,
+
+      status: "completed",
+    });
+
+    res.status(201).json({
+      message: "Transfer successful",
+
+      transaction,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+transactionController.getTransactions = async (req, res) => {
+  try {
+    const transactions = await Transaction.find({
+      user: req.user.id,
+    })
+      .populate("recipient", "name email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      transactions,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+export default transactionController;
