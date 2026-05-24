@@ -24,22 +24,36 @@ export const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setError(null);
+
+    if (!email.trim()) {
+      setError("Email is required");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email");
+      return;
+    }
+
+    if (!password.trim()) {
+      setError("Password is required");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // LOGIN
-      const user = await login(email, password, role);
+      const user = await login(email.trim(), password.trim(), role);
 
-      // ✅ CHECK ROLE MATCH
       if (user.role !== role) {
         setError(`This account is registered as ${user.role}, not ${role}`);
-
-        setIsLoading(false);
         return;
       }
 
-      // ✅ REDIRECT ACCORDING TO REAL USER ROLE
       navigate(
         user.role === "entrepreneur"
           ? "/dashboard/entrepreneur"
@@ -47,6 +61,7 @@ export const LoginPage: React.FC = () => {
       );
     } catch (err) {
       setError((err as Error).message);
+    } finally {
       setIsLoading(false);
     }
   };

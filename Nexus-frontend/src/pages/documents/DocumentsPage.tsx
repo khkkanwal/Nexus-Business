@@ -1,7 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-
-import { FileText, Upload, Download, Trash2, Share2, Eye } from "lucide-react";
-
+import {
+  FileText,
+  Upload,
+  Download,
+  Trash2,
+  Share2,
+  Eye,
+  AlertCircle,
+} from "lucide-react";
 import { Card, CardHeader, CardBody } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
@@ -11,8 +17,8 @@ const API_URL = "http://localhost:5000/api/documents";
 export const DocumentsPage: React.FC = () => {
   const [documents, setDocuments] = useState<any[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,7 +35,6 @@ export const DocumentsPage: React.FC = () => {
       });
 
       const data = await res.json();
-
       setDocuments(data.documents || []);
     } catch (error) {
       console.log(error);
@@ -42,35 +47,58 @@ export const DocumentsPage: React.FC = () => {
     fetchDocuments();
   }, []);
 
-  const handleUpload = async () => {
+  const validateFile = () => {
     if (!selectedFile) {
-      alert("Please select a file");
-
-      return;
+      setError("Please select a file");
+      return false;
     }
+
+    const allowedTypes = [
+      "application/pdf",
+      "image/png",
+      "image/jpeg",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+
+    if (!allowedTypes.includes(selectedFile.type)) {
+      setError("Only PDF, JPG, PNG, DOC, and DOCX files are allowed");
+      return false;
+    }
+
+    // Max file size = 5MB
+    const maxSize = 5 * 1024 * 1024;
+
+    if (selectedFile.size > maxSize) {
+      setError("File size must be less than 5MB");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleUpload = async () => {
+    setError(null);
+
+    if (!validateFile()) return;
 
     try {
       const formData = new FormData();
 
-      formData.append("title", selectedFile.name);
-
-      formData.append("document", selectedFile);
+      formData.append("title", selectedFile!.name);
+      formData.append("document", selectedFile!);
 
       const token = localStorage.getItem("token");
 
       const res = await fetch("http://localhost:5000/api/documents/upload", {
         method: "POST",
-
         headers: {
           Authorization: `Bearer ${token}`,
         },
-
         body: formData,
       });
 
       const data = await res.json();
-
-      console.log(data);
 
       if (!res.ok) {
         throw new Error(data.message);
@@ -80,11 +108,14 @@ export const DocumentsPage: React.FC = () => {
 
       setSelectedFile(null);
 
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
       fetchDocuments();
     } catch (error: any) {
       console.log(error);
-
-      alert(error.message);
+      setError(error.message);
     }
   };
 
@@ -100,7 +131,6 @@ export const DocumentsPage: React.FC = () => {
 
       const res = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
-
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -113,12 +143,10 @@ export const DocumentsPage: React.FC = () => {
       }
 
       alert("Document deleted successfully");
-
       fetchDocuments();
     } catch (error: any) {
       console.log(error);
-
-      alert(error.message);
+      setError(error.message);
     }
   };
 
@@ -135,7 +163,6 @@ export const DocumentsPage: React.FC = () => {
 
     try {
       await navigator.clipboard.writeText(fullUrl);
-
       alert("Document link copied to clipboard");
     } catch (error) {
       console.log(error);
@@ -153,7 +180,6 @@ export const DocumentsPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
-
           <p className="text-gray-600">Manage your startup's important files</p>
         </div>
 
@@ -163,6 +189,8 @@ export const DocumentsPage: React.FC = () => {
             ref={fileInputRef}
             className="hidden"
             onChange={(e) => {
+              setError(null);
+
               if (e.target.files && e.target.files[0]) {
                 setSelectedFile(e.target.files[0]);
               }
@@ -184,8 +212,20 @@ export const DocumentsPage: React.FC = () => {
         </div>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-md flex items-center gap-2">
+          <AlertCircle size={18} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {selectedFile && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-md">
+          Selected File: <strong>{selectedFile.name}</strong>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* STORAGE */}
         <Card className="lg:col-span-1">
           <CardHeader>
             <h2 className="text-lg font-medium text-gray-900">Storage</h2>
@@ -195,7 +235,6 @@ export const DocumentsPage: React.FC = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Used</span>
-
                 <span className="font-medium text-gray-900">
                   {totalSizeMB} MB
                 </span>
@@ -241,12 +280,10 @@ export const DocumentsPage: React.FC = () => {
                       key={doc._id}
                       className="flex items-center p-4 hover:bg-gray-50 rounded-xl border border-gray-100 transition"
                     >
-                      {/* ICON */}
                       <div className="p-3 bg-primary-50 rounded-xl mr-4">
                         <FileText size={24} className="text-primary-600" />
                       </div>
 
-                      {/* INFO */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="text-sm font-semibold text-gray-900 truncate">
@@ -272,7 +309,6 @@ export const DocumentsPage: React.FC = () => {
                       </div>
 
                       <div className="flex items-center gap-2 ml-4">
-                        {/* PREVIEW */}
                         <Button
                           variant="ghost"
                           size="sm"

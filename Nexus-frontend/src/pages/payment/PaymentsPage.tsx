@@ -1,42 +1,39 @@
 import React, { useEffect, useState } from "react";
-
-import { Wallet, ArrowDownCircle, ArrowUpCircle, Send } from "lucide-react";
-
+import {
+  Wallet,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Send,
+  AlertCircle,
+} from "lucide-react";
 import { Card, CardHeader, CardBody } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { Input } from "../../components/ui/Input";
-
 import {
   depositMoney,
   withdrawMoney,
   transferMoney,
   getTransactions,
 } from "../../services/transactionService";
-
 import { getUsers } from "../../services/userService";
 
 export const PaymentsPage: React.FC = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
-
   const [users, setUsers] = useState<any[]>([]);
-
   const [loading, setLoading] = useState(false);
 
   const [depositAmount, setDepositAmount] = useState("");
-
   const [withdrawAmount, setWithdrawAmount] = useState("");
-
   const [transferAmount, setTransferAmount] = useState("");
-
   const [recipient, setRecipient] = useState("");
+
+  const [error, setError] = useState<string | null>(null);
 
   const fetchTransactions = async () => {
     try {
       setLoading(true);
-
       const data = await getTransactions();
-
       setTransactions(data.transactions || []);
     } catch (error) {
       console.log(error);
@@ -48,7 +45,6 @@ export const PaymentsPage: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const data = await getUsers();
-
       setUsers(data || []);
     } catch (error) {
       console.log(error);
@@ -57,69 +53,95 @@ export const PaymentsPage: React.FC = () => {
 
   useEffect(() => {
     fetchTransactions();
-
     fetchUsers();
   }, []);
 
   const handleDeposit = async () => {
     try {
-      if (!depositAmount) {
-        return alert("Enter amount");
+      setError(null);
+
+      if (!depositAmount.trim()) {
+        setError("Deposit amount is required");
+        return;
       }
 
-      await depositMoney(Number(depositAmount));
+      const amount = Number(depositAmount);
+
+      if (isNaN(amount) || amount <= 0) {
+        setError("Deposit amount must be greater than 0");
+        return;
+      }
+
+      await depositMoney(amount);
 
       alert("Deposit successful");
-
       setDepositAmount("");
-
       fetchTransactions();
     } catch (error: any) {
       console.log(error);
-
-      alert(error.message);
+      setError(error.message || "Deposit failed");
     }
   };
 
   const handleWithdraw = async () => {
     try {
-      if (!withdrawAmount) {
-        return alert("Enter amount");
+      setError(null);
+
+      if (!withdrawAmount.trim()) {
+        setError("Withdraw amount is required");
+        return;
       }
 
-      await withdrawMoney(Number(withdrawAmount));
+      const amount = Number(withdrawAmount);
+
+      if (isNaN(amount) || amount <= 0) {
+        setError("Withdraw amount must be greater than 0");
+        return;
+      }
+
+      await withdrawMoney(amount);
 
       alert("Withdraw successful");
-
       setWithdrawAmount("");
-
       fetchTransactions();
     } catch (error: any) {
       console.log(error);
-
-      alert(error.message);
+      setError(error.message || "Withdraw failed");
     }
   };
 
   const handleTransfer = async () => {
     try {
-      if (!transferAmount || !recipient) {
-        return alert("Fill all fields");
+      setError(null);
+
+      if (!transferAmount.trim()) {
+        setError("Transfer amount is required");
+        return;
       }
 
-      await transferMoney(Number(transferAmount), recipient);
+      const amount = Number(transferAmount);
+
+      if (isNaN(amount) || amount <= 0) {
+        setError("Transfer amount must be greater than 0");
+        return;
+      }
+
+      if (!recipient) {
+        setError("Please select a recipient");
+        return;
+      }
+
+      await transferMoney(amount, recipient);
 
       alert("Transfer successful");
 
       setTransferAmount("");
-
       setRecipient("");
 
       fetchTransactions();
     } catch (error: any) {
       console.log(error);
-
-      alert(error.message);
+      setError(error.message || "Transfer failed");
     }
   };
 
@@ -139,11 +161,17 @@ export const PaymentsPage: React.FC = () => {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Payment Dashboard</h1>
-
         <p className="text-gray-600">
           Manage deposits, withdrawals and transfers
         </p>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-md flex items-start">
+          <AlertCircle size={18} className="mr-2 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>

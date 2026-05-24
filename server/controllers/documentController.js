@@ -1,15 +1,24 @@
 import Document from "../models/documentModel.js";
 import fs from "fs";
+import sanitizeHtml from "sanitize-html";
 
 const documentController = {};
 
 documentController.uploadDocument = async (req, res) => {
   try {
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Document file is required",
+      });
+    }
+
+    const title = sanitizeHtml(req.body.title || req.file.originalname).trim();
+
     const document = await Document.create({
-      title: req.body.title,
+      title,
       fileUrl: req.file.path,
       uploadedBy: req.user.id,
-      status: "uploaded",
+      status: "pending",
     });
 
     res.status(201).json({
@@ -53,9 +62,15 @@ documentController.uploadSignature = async (req, res) => {
       });
     }
 
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Signature image required",
+      });
+    }
+
     document.signatureUrl = req.file.path;
 
-    document.status = "signed";
+    document.status = "completed";
 
     await document.save();
 
@@ -71,6 +86,7 @@ documentController.uploadSignature = async (req, res) => {
     });
   }
 };
+
 documentController.deleteDocument = async (req, res) => {
   try {
     const document = await Document.findById(req.params.id);

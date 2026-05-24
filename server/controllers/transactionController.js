@@ -1,10 +1,11 @@
 import Transaction from "../models/transactionModel.js";
+import sanitizeHtml from "sanitize-html";
 
 const transactionController = {};
 
 transactionController.deposit = async (req, res) => {
   try {
-    const { amount } = req.body;
+    const amount = Number(req.body.amount);
 
     if (!amount || amount <= 0) {
       return res.status(400).json({
@@ -14,17 +15,13 @@ transactionController.deposit = async (req, res) => {
 
     const transaction = await Transaction.create({
       user: req.user.id,
-
       type: "deposit",
-
       amount,
-
       status: "completed",
     });
 
     res.status(201).json({
       message: "Deposit successful",
-
       transaction,
     });
   } catch (error) {
@@ -38,7 +35,7 @@ transactionController.deposit = async (req, res) => {
 
 transactionController.withdraw = async (req, res) => {
   try {
-    const { amount } = req.body;
+    const amount = Number(req.body.amount);
 
     if (!amount || amount <= 0) {
       return res.status(400).json({
@@ -48,17 +45,13 @@ transactionController.withdraw = async (req, res) => {
 
     const transaction = await Transaction.create({
       user: req.user.id,
-
       type: "withdraw",
-
       amount,
-
       status: "completed",
     });
 
     res.status(201).json({
       message: "Withdraw successful",
-
       transaction,
     });
   } catch (error) {
@@ -72,7 +65,9 @@ transactionController.withdraw = async (req, res) => {
 
 transactionController.transfer = async (req, res) => {
   try {
-    const { amount, recipient } = req.body;
+    const amount = Number(req.body.amount);
+
+    const recipient = sanitizeHtml(req.body.recipient || "").trim();
 
     if (!amount || amount <= 0 || !recipient) {
       return res.status(400).json({
@@ -82,19 +77,14 @@ transactionController.transfer = async (req, res) => {
 
     const transaction = await Transaction.create({
       user: req.user.id,
-
       recipient,
-
       type: "transfer",
-
       amount,
-
       status: "completed",
     });
 
     res.status(201).json({
       message: "Transfer successful",
-
       transaction,
     });
   } catch (error) {

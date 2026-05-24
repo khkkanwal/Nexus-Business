@@ -71,15 +71,42 @@ export const CreateMeetingPage: React.FC = () => {
     try {
       setLoading(true);
 
-      const participants = selectedParticipants;
+      if (!formData.title.trim()) {
+        alert("Meeting title is required");
+        return;
+      }
+
+      if (formData.title.trim().length < 3) {
+        alert("Meeting title must be at least 3 characters");
+        return;
+      }
+
+      if (!formData.startTime || !formData.endTime) {
+        alert("Start time and end time are required");
+        return;
+      }
+
+      const start = new Date(formData.startTime);
+      const end = new Date(formData.endTime);
+      const now = new Date();
+
+      if (start < now) {
+        alert("Meeting cannot start in the past");
+        return;
+      }
+
+      if (end <= start) {
+        alert("End time must be after start time");
+        return;
+      }
+
       const payload = {
-        title: formData.title,
-        description: formData.description,
-        participants,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        participants: selectedParticipants,
         startTime: formData.startTime,
         endTime: formData.endTime,
       };
-      console.log(payload);
 
       const data = await createMeeting(payload);
 

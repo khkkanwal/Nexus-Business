@@ -1,22 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
 import { Card, CardBody, CardHeader } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
-
 import { getMeetingById, updateMeeting } from "../../services/meetingService";
-
 import { getUsers } from "../../services/userService";
 
 export const EditMeetingPage: React.FC = () => {
   const navigate = useNavigate();
-
   const { id } = useParams();
 
   const [loading, setLoading] = useState(false);
-
   const [users, setUsers] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
     [],
@@ -29,28 +25,20 @@ export const EditMeetingPage: React.FC = () => {
     endTime: "",
   });
 
-  // =========================
-  // FETCH USERS
-  // =========================
   const fetchUsers = async () => {
     try {
       const data = await getUsers();
-
       setUsers(data);
     } catch (error) {
       console.log(error);
     }
   };
 
-  // =========================
-  // FETCH MEETING
-  // =========================
   const fetchMeeting = async () => {
     try {
       if (!id) return;
 
       const data = await getMeetingById(id);
-
       const meeting = data.meeting;
 
       setFormData({
@@ -76,9 +64,6 @@ export const EditMeetingPage: React.FC = () => {
     fetchMeeting();
   }, []);
 
-  // =========================
-  // HANDLE CHANGE
-  // =========================
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -86,35 +71,73 @@ export const EditMeetingPage: React.FC = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+
+    setError(null);
   };
 
-  // =========================
-  // HANDLE PARTICIPANTS
-  // =========================
   const handleParticipantChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
 
     if (!value) return;
-
     if (selectedParticipants.includes(value)) return;
 
     setSelectedParticipants([...selectedParticipants, value]);
   };
 
-  // =========================
-  // REMOVE PARTICIPANT
-  // =========================
   const removeParticipant = (participantId: string) => {
     setSelectedParticipants(
       selectedParticipants.filter((id) => id !== participantId),
     );
   };
 
-  // =========================
-  // UPDATE MEETING
-  // =========================
+  const validateForm = () => {
+    const trimmedTitle = formData.title.trim();
+
+    if (!trimmedTitle) {
+      setError("Meeting title is required");
+      return false;
+    }
+
+    if (trimmedTitle.length < 3) {
+      setError("Meeting title must be at least 3 characters");
+      return false;
+    }
+
+    if (!formData.startTime) {
+      setError("Start time is required");
+      return false;
+    }
+
+    if (!formData.endTime) {
+      setError("End time is required");
+      return false;
+    }
+
+    const start = new Date(formData.startTime);
+    const end = new Date(formData.endTime);
+    const now = new Date();
+
+    if (start < now) {
+      setError("Start time cannot be in the past");
+      return false;
+    }
+
+    if (end <= start) {
+      setError("End time must be after start time");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setError(null);
+
+    const isValid = validateForm();
+
+    if (!isValid) return;
 
     try {
       setLoading(true);
@@ -122,8 +145,8 @@ export const EditMeetingPage: React.FC = () => {
       if (!id) return;
 
       const payload = {
-        title: formData.title,
-        description: formData.description,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
         participants: selectedParticipants,
         startTime: formData.startTime,
         endTime: formData.endTime,
@@ -137,7 +160,7 @@ export const EditMeetingPage: React.FC = () => {
     } catch (error: any) {
       console.log(error);
 
-      alert(error.message || "Failed to update meeting");
+      setError(error.message || "Failed to update meeting");
     } finally {
       setLoading(false);
     }
@@ -145,14 +168,11 @@ export const EditMeetingPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* HEADER */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Edit Meeting</h1>
-
         <p className="text-gray-600">Update your meeting details</p>
       </div>
 
-      {/* FORM */}
       <Card>
         <CardHeader>
           <h2 className="text-lg font-semibold text-gray-900">
@@ -161,17 +181,22 @@ export const EditMeetingPage: React.FC = () => {
         </CardHeader>
 
         <CardBody>
+          {error && (
+            <div className="mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-red-700">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* TITLE */}
             <Input
               label="Meeting Title"
               name="title"
               value={formData.title}
               onChange={handleChange}
               placeholder="Enter meeting title"
+              required
             />
 
-            {/* DESCRIPTION */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description
@@ -187,7 +212,6 @@ export const EditMeetingPage: React.FC = () => {
               />
             </div>
 
-            {/* PARTICIPANTS */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Participants
@@ -206,7 +230,6 @@ export const EditMeetingPage: React.FC = () => {
                 ))}
               </select>
 
-              {/* SELECTED USERS */}
               <div className="flex flex-wrap gap-2 mt-3">
                 {selectedParticipants.map((participantId) => {
                   const participant = users.find(
@@ -246,6 +269,7 @@ export const EditMeetingPage: React.FC = () => {
                   value={formData.startTime}
                   onChange={handleChange}
                   className="w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 p-3"
+                  required
                 />
               </div>
 
@@ -260,11 +284,11 @@ export const EditMeetingPage: React.FC = () => {
                   value={formData.endTime}
                   onChange={handleChange}
                   className="w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 p-3"
+                  required
                 />
               </div>
             </div>
 
-            {/* BUTTONS */}
             <div className="flex justify-end gap-3">
               <Button
                 type="button"

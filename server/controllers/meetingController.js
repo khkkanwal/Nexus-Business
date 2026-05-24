@@ -1,10 +1,19 @@
 import Meeting from "../models/meetingModel.js";
+import sanitizeHtml from "sanitize-html";
 
 const meetingController = {};
 
 meetingController.createMeeting = async (req, res) => {
   try {
-    const { title, description, participants, startTime, endTime } = req.body;
+    const title = sanitizeHtml(req.body.title || "").trim();
+
+    const description = sanitizeHtml(req.body.description || "").trim();
+
+    const participants = req.body.participants || [];
+
+    const startTime = req.body.startTime;
+
+    const endTime = req.body.endTime;
 
     const organizer = req.user.id;
 
@@ -14,13 +23,17 @@ meetingController.createMeeting = async (req, res) => {
       });
     }
 
+    // PREVENT INVALID DATE
+    if (new Date(endTime) <= new Date(startTime)) {
+      return res.status(400).json({
+        message: "End time must be after start time",
+      });
+    }
+
     const existingMeeting = await Meeting.findOne({
       organizer,
-
       startTime: { $lt: endTime },
-
       endTime: { $gt: startTime },
-
       status: "scheduled",
     });
 
@@ -117,7 +130,15 @@ meetingController.getMeetingById = async (req, res) => {
 
 meetingController.updateMeeting = async (req, res) => {
   try {
-    const { title, description, participants, startTime, endTime } = req.body;
+    const title = sanitizeHtml(req.body.title || "").trim();
+
+    const description = sanitizeHtml(req.body.description || "").trim();
+
+    const participants = req.body.participants;
+
+    const startTime = req.body.startTime;
+
+    const endTime = req.body.endTime;
 
     const meeting = await Meeting.findById(req.params.id);
 
@@ -133,24 +154,28 @@ meetingController.updateMeeting = async (req, res) => {
       });
     }
 
-    if (startTime && endTime) {
-      const existingMeeting = await Meeting.findOne({
-        organizer: req.user.id,
+    const newStart = startTime || meeting.startTime;
 
-        _id: { $ne: meeting._id },
+    const newEnd = endTime || meeting.endTime;
 
-        startTime: { $lt: endTime },
-
-        endTime: { $gt: startTime },
-
-        status: "scheduled",
+    if (new Date(newEnd) <= new Date(newStart)) {
+      return res.status(400).json({
+        message: "End time must be after start time",
       });
+    }
 
-      if (existingMeeting) {
-        return res.status(400).json({
-          message: "Meeting time conflicts with another meeting",
-        });
-      }
+    const existingMeeting = await Meeting.findOne({
+      organizer: req.user.id,
+      _id: { $ne: meeting._id },
+      startTime: { $lt: newEnd },
+      endTime: { $gt: newStart },
+      status: "scheduled",
+    });
+
+    if (existingMeeting) {
+      return res.status(400).json({
+        message: "Meeting time conflicts with another meeting",
+      });
     }
 
     if (title) meeting.title = title;
@@ -223,7 +248,6 @@ meetingController.acceptMeeting = async (req, res) => {
       });
     }
 
-    // FIND PARTICIPANT
     const participant = meeting.participants.find(
       (p) => p.user.toString() === req.user.id,
     );

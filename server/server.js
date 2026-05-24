@@ -9,6 +9,7 @@ import documentRoutes from "./routes/documentRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import http from "http";
 import { Server } from "socket.io";
+import otpRoutes from "./routes/otpRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -29,7 +30,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/transactions", transactionRoutes);
-
+app.use("/api/otp", otpRoutes);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {

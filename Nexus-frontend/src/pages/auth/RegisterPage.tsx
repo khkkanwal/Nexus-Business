@@ -25,22 +25,65 @@ export const RegisterPage: React.FC = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const validateForm = () => {
+    if (!name.trim()) {
+      return "Full name is required";
+    }
+
+    if (name.trim().length < 3) {
+      return "Name must be at least 3 characters";
+    }
+
+    if (!email.trim()) {
+      return "Email is required";
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      return "Please enter a valid email";
+    }
+
+    if (!password) {
+      return "Password is required";
+    }
+
+    if (password.length < 6) {
+      return "Password must be at least 6 characters";
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      return "Password must contain at least one uppercase letter";
+    }
+
+    if (!/[0-9]/.test(password)) {
+      return "Password must contain at least one number";
+    }
+
+    if (password !== confirmPassword) {
+      return "Passwords do not match";
+    }
+
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setError(null);
 
-    // Validate passwords match
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+    const validationError = validateForm();
+
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await register(name, email, password, role);
-      setIsLoading(false);
-      // Redirect based on user role
+      await register(name.trim(), email.trim(), password.trim(), role);
+
       navigate(
         role === "entrepreneur"
           ? "/dashboard/entrepreneur"
@@ -48,6 +91,7 @@ export const RegisterPage: React.FC = () => {
       );
     } catch (err) {
       setError((err as Error).message);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -55,45 +99,19 @@ export const RegisterPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="w-12 h-12 bg-primary-600 rounded-md flex items-center justify-center">
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-white"
-            >
-              <path
-                d="M20 7H4C2.89543 7 2 7.89543 2 9V19C2 20.1046 2.89543 21 4 21H20C21.1046 21 22 20.1046 22 19V9C22 7.89543 21.1046 7 20 7Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M16 21V5C16 3.89543 15.1046 3 14 3H10C8.89543 3 8 3.89543 8 5V21"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 className="text-center text-3xl font-bold text-gray-900">
           Create your account
         </h2>
+
         <p className="mt-2 text-center text-sm text-gray-600">
-          Join Business Nexus to connect with partners
+          Join Business Nexus
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {error && (
-            <div className="mb-4 bg-error-50 border border-error-500 text-error-700 px-4 py-3 rounded-md flex items-start">
+            <div className="mb-4 bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-md flex items-start">
               <AlertCircle size={18} className="mr-2 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -102,15 +120,16 @@ export const RegisterPage: React.FC = () => {
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                I am registering as a
+                Register as
               </label>
+
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  className={`py-3 px-4 border rounded-md flex items-center justify-center transition-colors ${
+                  className={`py-3 px-4 border rounded-md flex items-center justify-center ${
                     role === "entrepreneur"
                       ? "border-primary-500 bg-primary-50 text-primary-700"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      : "border-gray-300"
                   }`}
                   onClick={() => setRole("entrepreneur")}
                 >
@@ -120,10 +139,10 @@ export const RegisterPage: React.FC = () => {
 
                 <button
                   type="button"
-                  className={`py-3 px-4 border rounded-md flex items-center justify-center transition-colors ${
+                  className={`py-3 px-4 border rounded-md flex items-center justify-center ${
                     role === "investor"
                       ? "border-primary-500 bg-primary-50 text-primary-700"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      : "border-gray-300"
                   }`}
                   onClick={() => setRole("investor")}
                 >
@@ -134,21 +153,19 @@ export const RegisterPage: React.FC = () => {
             </div>
 
             <Input
-              label="Full name"
+              label="Full Name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              required
               fullWidth
               startAdornment={<User size={18} />}
             />
 
             <Input
-              label="Email address"
+              label="Email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
               fullWidth
               startAdornment={<Mail size={18} />}
             />
@@ -158,77 +175,30 @@ export const RegisterPage: React.FC = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
               fullWidth
               startAdornment={<Lock size={18} />}
             />
 
             <Input
-              label="Confirm password"
+              label="Confirm Password"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              required
               fullWidth
               startAdornment={<Lock size={18} />}
             />
 
-            <div className="flex items-center">
-              <input
-                id="terms"
-                name="terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="terms"
-                className="ml-2 block text-sm text-gray-900"
-              >
-                I agree to the{" "}
-                <a
-                  href="#"
-                  className="font-medium text-primary-600 hover:text-primary-500"
-                >
-                  Terms of Service
-                </a>{" "}
-                and{" "}
-                <a
-                  href="#"
-                  className="font-medium text-primary-600 hover:text-primary-500"
-                >
-                  Privacy Policy
-                </a>
-              </label>
-            </div>
-
             <Button type="submit" fullWidth isLoading={isLoading}>
-              Create account
+              Create Account
             </Button>
+
+            <div className="text-center text-sm">
+              Already have an account?{" "}
+              <Link to="/login" className="text-primary-600 font-medium">
+                Sign In
+              </Link>
+            </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or</span>
-              </div>
-            </div>
-
-            <div className="mt-2 text-center">
-              <p className="text-sm text-gray-600">
-                Already have an account?{" "}
-                <Link
-                  to="/login"
-                  className="font-medium text-primary-600 hover:text-primary-500"
-                >
-                  Sign in
-                </Link>
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

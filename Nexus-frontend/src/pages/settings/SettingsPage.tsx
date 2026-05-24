@@ -1,18 +1,17 @@
 import React, { useState } from "react";
 import { User, Lock, Bell, Globe, Palette, CreditCard } from "lucide-react";
-
 import { Card, CardHeader, CardBody } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { Avatar } from "../../components/ui/Avatar";
-
 import { useAuth } from "../../context/AuthContext";
 
 export const SettingsPage: React.FC = () => {
   const { user, updateProfile } = useAuth();
 
   const [loading, setLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -21,18 +20,15 @@ export const SettingsPage: React.FC = () => {
     bio: user?.profile?.bio || "",
     avatar: user?.profile?.avatar || "",
   });
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
-  const [passwordLoading, setPasswordLoading] = useState(false);
   if (!user) return null;
 
-  // =========================
-  // HANDLE INPUT
-  // =========================
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -42,11 +38,9 @@ export const SettingsPage: React.FC = () => {
     });
   };
 
-  // =========================
-  // PHOTO CHANGE
-  // =========================
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
 
     const imageUrl = URL.createObjectURL(file);
@@ -57,9 +51,6 @@ export const SettingsPage: React.FC = () => {
     });
   };
 
-  // =========================
-  // SAVE PROFILE
-  // =========================
   const handleSave = async () => {
     try {
       setLoading(true);
@@ -74,24 +65,23 @@ export const SettingsPage: React.FC = () => {
           bio: formData.bio,
         },
       });
-    } catch (error) {
+
+      alert("Profile updated successfully");
+    } catch (error: any) {
       console.log(error);
+      alert(error.message || "Failed to update profile");
     } finally {
       setLoading(false);
     }
   };
-  // =========================
-  // CHANGE PASSWORD
-  // =========================
+
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPasswordData({
       ...passwordData,
       [e.target.name]: e.target.value,
     });
   };
-  // =========================
-  // CHANGE PASSWORD
-  // =========================
+
   const handleUpdatePassword = async () => {
     try {
       if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -107,12 +97,10 @@ export const SettingsPage: React.FC = () => {
         "http://localhost:5000/api/auth/change-password",
         {
           method: "PUT",
-
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-
           body: JSON.stringify({
             currentPassword: passwordData.currentPassword,
             newPassword: passwordData.newPassword,
@@ -134,7 +122,8 @@ export const SettingsPage: React.FC = () => {
         confirmPassword: "",
       });
     } catch (error: any) {
-      alert(error.message);
+      console.log(error);
+      alert(error.message || "Failed to update password");
     } finally {
       setPasswordLoading(false);
     }
@@ -142,7 +131,6 @@ export const SettingsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* HEADER */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
         <p className="text-gray-600">
@@ -151,7 +139,6 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* LEFT SIDEBAR */}
         <Card className="lg:col-span-1">
           <CardBody className="p-2">
             <nav className="space-y-1">
@@ -188,9 +175,7 @@ export const SettingsPage: React.FC = () => {
           </CardBody>
         </Card>
 
-        {/* RIGHT CONTENT */}
         <div className="lg:col-span-3 space-y-6">
-          {/* PROFILE SETTINGS */}
           <Card>
             <CardHeader>
               <h2 className="text-lg font-medium text-gray-900">
@@ -199,7 +184,6 @@ export const SettingsPage: React.FC = () => {
             </CardHeader>
 
             <CardBody className="space-y-6">
-              {/* AVATAR */}
               <div className="flex items-center gap-6">
                 <Avatar src={formData.avatar} alt={user.name} size="xl" />
 
@@ -214,7 +198,6 @@ export const SettingsPage: React.FC = () => {
                     Change Photo
                   </Button>
 
-                  {/* FILE INPUT (IMPORTANT) */}
                   <input
                     id="photo-input"
                     type="file"
@@ -229,7 +212,6 @@ export const SettingsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* INPUTS */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
                   label="Full Name"
@@ -256,7 +238,6 @@ export const SettingsPage: React.FC = () => {
                 />
               </div>
 
-              {/* BIO */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Bio
@@ -271,7 +252,6 @@ export const SettingsPage: React.FC = () => {
                 />
               </div>
 
-              {/* BUTTONS */}
               <div className="flex justify-end gap-3">
                 <Button
                   variant="outline"
@@ -295,7 +275,6 @@ export const SettingsPage: React.FC = () => {
             </CardBody>
           </Card>
 
-          {/* SECURITY */}
           <Card>
             <CardHeader>
               <h2 className="text-lg font-medium text-gray-900">
